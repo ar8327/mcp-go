@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
+	"math/big"
 	"net/http"
 	"os"
 	"reflect"
@@ -204,7 +206,21 @@ func (r CallToolRequest) rawIntArgument(key string) (int, bool) {
 	if !ok {
 		return 0, false
 	}
-	i, err := strconv.Atoi(strings.TrimSpace(string(rawVal)))
+	s := strings.TrimSpace(string(rawVal))
+	if i, err := strconv.Atoi(s); err == nil {
+		return i, true
+	}
+	if len(s) > 64 || !strings.ContainsAny(s, ".eE") {
+		return 0, false
+	}
+	if f, err := strconv.ParseFloat(s, 64); err != nil || f < float64(math.MinInt) || f > float64(math.MaxInt) {
+		return 0, false
+	}
+	rat, ok := new(big.Rat).SetString(s)
+	if !ok || !rat.IsInt() {
+		return 0, false
+	}
+	i, err := strconv.Atoi(rat.Num().String())
 	if err != nil {
 		return 0, false
 	}

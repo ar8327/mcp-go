@@ -459,4 +459,11 @@ func TestInputSchemaValidation_PreservesLargeIntegerPrecision(t *testing.T) {
 	resp = srv.HandleMessage(t.Context(), []byte(`{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"check_min_id","arguments":{"id":9007199254740993}}}`))
 	requireToolSuccess(t, resp)
 	require.Equal(t, 9007199254740993, handlerReceivedID)
+
+	for _, rawNum := range []string{"9007199254740993.0", "9.007199254740993e+15"} {
+		handlerReceivedID = 0
+		resp = srv.HandleMessage(t.Context(), []byte(`{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"check_min_id","arguments":{"id":`+rawNum+`}}}`))
+		requireToolSuccess(t, resp)
+		require.Equal(t, 9007199254740993, handlerReceivedID)
+	}
 }
