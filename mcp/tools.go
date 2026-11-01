@@ -194,6 +194,7 @@ func (r CallToolRequest) RequireString(key string) (string, error) {
 	return "", fmt.Errorf("required argument %q not found", key)
 }
 
+// rawIntArgument parses an exact int argument from RawArguments when present.
 func (r CallToolRequest) rawIntArgument(key string) (int, bool) {
 	if len(r.Params.RawArguments) == 0 {
 		return 0, false
@@ -213,7 +214,8 @@ func (r CallToolRequest) rawIntArgument(key string) (int, bool) {
 	if len(s) > 64 || !strings.ContainsAny(s, ".eE") {
 		return 0, false
 	}
-	if f, err := strconv.ParseFloat(s, 64); err != nil || f < float64(math.MinInt) || f > float64(math.MaxInt) {
+	f, err := strconv.ParseFloat(s, 64)
+	if err != nil || (f > -1 && f < 1) || f < float64(math.MinInt) || f > float64(math.MaxInt) {
 		return 0, false
 	}
 	rat, ok := new(big.Rat).SetString(s)
